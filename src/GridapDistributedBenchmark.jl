@@ -118,4 +118,22 @@ function run(assembly_strategy::AbstractString, subdomains=(1, 1), cells=(4, 4);
     GridapDistributed.timer_report(tl2norm, false)
 end
 
+options=Dict{Symbol,Any}()
+options[:ksp_type]="cg"
+options[:ksp_rtol]=1.0e-06
+options[:ksp_atol]=0.0
+options[:ksp_monitor]=""
+options[:pc_type]="gamg"
+options[:pc_gamg_type]="agg"
+options[:pc_gamg_est_ksp_type]="cg"
+options[:mg_levels_esteig_ksp_type]="cg"
+options[:mg_coarse_sub_pc_type]="cholesky"
+options[:mg_coarse_sub_pc_factor_mat_ordering_type]="nd"
+options[:pc_gamg_process_eq_limit]=50
+options[:pc_gamg_square_graph]=9
+options[:pc_gamg_agg_nsmooths]=1
+
+run("RowsComputedLocally"; options...)
+run("OwnedCellsStrategy" ; options...)
+
 end # module
