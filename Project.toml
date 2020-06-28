@@ -1,0 +1,4 @@
+name = "GridapDistributedBenchmark"
+uuid = "2476ee10-c162-4477-a0c8-bb04c4004609"
+authors = ["amartin <alberto.martin@monash.edu>"]
+version = "0.1.0"
