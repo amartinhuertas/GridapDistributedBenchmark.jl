@@ -1,3 +1,4 @@
+using Gridap
 using GridapDistributedBenchmark
 using GridapDistributed
 using ArgParse
@@ -5,6 +6,10 @@ using ArgParse
 function parse_commandline()
     s = ArgParseSettings()
     @add_arg_table! s begin
+        "--mesh", "-m"
+        help = "Mesh generator"
+        arg_type = String
+        default="cartesian"
         "--subdomains", "-s"
         help = "Tuple with the # of subdomains per Cartesian direction"
         arg_type = Int64
@@ -15,6 +20,13 @@ function parse_commandline()
         arg_type = Int64
         default=[4]
         nargs='+'
+        "--num-uniform-refinements", "-r"
+        help = "# of uniform refinements"
+        arg_type = Int64
+        default=1
+        "--solver", "-k"
+        help = "PETSc solver to use (gamg, mumps)"
+        default = "gamg"
         "--nruns", "-n"
         help = "Number of times to repeat the experiment"
         arg_type = Int64
@@ -24,27 +36,36 @@ function parse_commandline()
 end
 
 parsed_args = parse_commandline()
-subdomains = Tuple(parsed_args["subdomains"])
-partition = Tuple(parsed_args["partition"])
-n = parsed_args["nruns"]
+mesh        = parsed_args["mesh"]
+solver      = parsed_args["solver"]
+subdomains  = Tuple(parsed_args["subdomains"])
+partition   = Tuple(parsed_args["partition"])
+numrefs     = parsed_args["num-uniform-refinements"]
+n           = parsed_args["nruns"]
 
-options=Dict{Symbol,Any}()
-options[:ksp_type]="cg"
-options[:ksp_rtol]=1.0e-06
-options[:ksp_atol]=0.0
-options[:ksp_monitor]=""
-options[:pc_type]="gamg"
-options[:pc_gamg_type]="agg"
-options[:pc_gamg_est_ksp_type]="cg"
-options[:mg_levels_esteig_ksp_type]="cg"
-options[:mg_coarse_sub_pc_type]="cholesky"
-options[:mg_coarse_sub_pc_factor_mat_ordering_type]="nd"
-options[:pc_gamg_process_eq_limit]=50
-options[:pc_gamg_square_graph]=9
-options[:pc_gamg_agg_nsmooths]=1
 
 MPIPETScCommunicator() do comm
+  function generate_model()
+    @assert mesh=="cartesian" || mesh=="p4est"
+    d = length(subdomains)
+    domain = Vector{Float64}(undef, 2 * d)
+    for i = 1:2:2 * d
+         domain[i  ] = 0
+         domain[i + 1] = 1
+    end
+    domain = Tuple(domain)
+    coarse_model = CartesianDiscreteModel(domain,subdomains)
+    tmesh = GridapDistributed.MPITimer{GridapDistributed.MPITimerModeMin}(comm.comm, "Model")
+     GridapDistributed.timer_start(tmesh)
+     if (mesh=="cartesian")
+       model = CartesianDiscreteModel(comm, subdomains, domain, partition)
+     else
+       model = UniformlyRefinedForestOfOctreesDiscreteModel(comm,coarse_model,numrefs)
+     end
+     GridapDistributed.timer_stop(tmesh)
+     model, tmesh
+  end
   for i=1:n
-    GridapDistributedBenchmark.run(comm, subdomains, partition; options...)
+    GridapDistributedBenchmark.run(comm, generate_model, solver)
   end
 end
