@@ -1,4 +1,5 @@
 using GridapDistributedBenchmark
+using GridapDistributed
 using ArgParse
 
 function parse_commandline()
@@ -42,11 +43,8 @@ options[:pc_gamg_process_eq_limit]=50
 options[:pc_gamg_square_graph]=9
 options[:pc_gamg_agg_nsmooths]=1
 
-for i=1:n 
-  GridapDistributedBenchmark.run("RowsComputedLocally", 
-                                 subdomains, partition; 
-                                 options...)
-  GridapDistributedBenchmark.run("OwnedCellsStrategy", 
-                                 subdomains, partition;
-                                 options...)
+MPIPETScCommunicator() do comm
+  for i=1:n
+    GridapDistributedBenchmark.run(comm, subdomains, partition; options...)
+  end
 end
