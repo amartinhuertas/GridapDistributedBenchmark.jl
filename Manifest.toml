@@ -172,8 +172,6 @@ version = "0.1.0"
 [[GridapDistributedPETScWrappers]]
 deps = ["Compat", "Libdl", "LinearAlgebra", "MPI", "PETSc_jll", "SparseArrays", "Test"]
 git-tree-sha1 = "f2c1538085399ed27813fe3fd2d0c9106fed592f"
-repo-rev = "master"
-repo-url = "https://github.com/gridap/GridapDistributedPETScWrappers.jl"
 uuid = "743b6f9b-fae8-55fc-a981-4e9a2885e829"
 version = "0.1.0"
 
@@ -339,8 +337,6 @@ version = "2.2.0+2"
 [[P4est_wrapper]]
 deps = ["CEnum", "Libdl", "MPI", "P4est_jll"]
 git-tree-sha1 = "b17df71365cfaa70d1a95d564b495be3d429849d"
-repo-rev = "master"
-repo-url = "https://github.com/gridap/P4est_wrapper.jl"
 uuid = "3743d7c0-8adf-11ea-380b-7d33b0ecc1da"
 version = "0.1.0"
 
