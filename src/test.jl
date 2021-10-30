@@ -1,7 +1,11 @@
 using Gridap
-using GridapDistributedBenchmark
+using GridapPETSc
 using GridapDistributed
+using GridapDistributedBenchmark
 using ArgParse
+using GridapP4est
+using PartitionedArrays
+const PArrays=PartitionedArrays
 
 function parse_commandline()
     s = ArgParseSettings()
@@ -43,29 +47,42 @@ partition   = Tuple(parsed_args["partition"])
 numrefs     = parsed_args["num-uniform-refinements"]
 n           = parsed_args["nruns"]
 
-
-MPIPETScCommunicator() do comm
-  function generate_model()
-    @assert mesh=="cartesian" || mesh=="p4est"
+function main_cartesian(parts)
+  function generate_model_cartesian()
     d = length(subdomains)
-    domain = Vector{Float64}(undef, 2 * d)
+    domain = Vector{Float64}(undef, 2*d)
     for i = 1:2:2 * d
-         domain[i  ] = 0
-         domain[i + 1] = 1
+      domain[i]=0
+      domain[i+1]=1
+    end
+    domain = Tuple(domain)
+    model = CartesianDiscreteModel(parts, domain, partition)
+  end
+  GridapDistributedBenchmark.run(parts,generate_model_cartesian,"gamg")
+end
+
+function main_p4est(parts)
+  function generate_model_p4est()
+    d = length(subdomains)
+    domain = Vector{Float64}(undef, 2*d)
+    for i = 1:2:2 * d
+      domain[i]=0
+      domain[i+1]=1
     end
     domain = Tuple(domain)
     coarse_model = CartesianDiscreteModel(domain,subdomains)
-    tmesh = GridapDistributed.MPITimer{GridapDistributed.MPITimerModeMin}(comm.comm, "Model")
-     GridapDistributed.timer_start(tmesh)
-     if (mesh=="cartesian")
-       model = CartesianDiscreteModel(comm, subdomains, domain, partition)
-     else
-       model = UniformlyRefinedForestOfOctreesDiscreteModel(comm,coarse_model,numrefs)
-     end
-     GridapDistributed.timer_stop(tmesh)
-     model, tmesh
+    model = UniformlyRefinedForestOfOctreesDiscreteModel(parts,coarse_model,numrefs)
   end
+  GridapDistributedBenchmark.run(parts,generate_model_p4est,"gamg")
+end
+
+@assert mesh=="cartesian" || mesh=="p4est"
+if (mesh=="cartesian")
   for i=1:n
-    GridapDistributedBenchmark.run(comm, generate_model, solver)
+    prun(main_cartesian,mpi,subdomains)
+  end
+else
+  for i=1:n
+    prun(main_p4est,mpi,prod(subdomains))
   end
 end
