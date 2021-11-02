@@ -87,6 +87,8 @@ function run(parts, generate_model, solver="gamg")
     end
 
     display(t)
+
+    GridapPETSc.gridap_petsc_gc()
   end
 end
 
