@@ -74,12 +74,11 @@ function generate_2d_dicts(mesh,solver,lst_nodes,lst_ls,nr=10)
        end
      end
    end
+   dicts
 end
 
 function generate_3d_dicts(mesh,solver,lst_nodes,lst_ls,nr=10)
   d=3
-  lst_nodes = collect(1:1)
-  lst_ls    = [10]#,20,30,40]
   for node in lst_nodes
     px=4*node
     py=4*node
@@ -110,10 +109,10 @@ function generate_3d_dicts(mesh,solver,lst_nodes,lst_ls,nr=10)
       end
     end
   end
+  dicts
 end
 
-dicts=[Dict(:d=>2,:numrefs=>2,:nc=>(4,4),:np=>(1,1),:mesh=>:p4est,:solver=>:gamg,:nr=>10)]
-dicts=[Dict(:d=>2,:numrefs=>2,:nc=>(4,4),:np=>(1,1),:mesh=>:cartesian,:solver=>:gamg,:nr=>10)]
+dicts=generate_2d_dicts(:cartesian,:gamg,[1],[16,32,64,128,256,512])
 template = read(projectdir("jobtemplate.sh"),String)
 for params in dicts
    fparams=convert_nc_np_to_prod(params)
