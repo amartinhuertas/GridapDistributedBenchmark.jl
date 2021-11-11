@@ -39,7 +39,7 @@ for row in rows
 end
 
 df = DataFrame(collect(values(dict)))
-sort!(df,order(:np,rev=false))
+sort!(df,[order(:mesh,rev=false),order(:ls,rev=false),order(:np,rev=false)])
 
 mkpath(plotsdir())
 fn = plotsdir("summary.csv")

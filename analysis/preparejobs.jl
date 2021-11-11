@@ -25,7 +25,7 @@ function jobdict(params)
   "q" => "normal",
   "o" => datadir(jobname(fparams,"o.txt")),
   "e" => datadir(jobname(fparams,"e.txt")),
-  "walltime" => "00:15:00",
+  "walltime" => "00:30:00",
   "ncpus" => prod(np),
   "mem" => "$(prod(np)*4)gb",
   "name" => jobname(fparams),
@@ -112,8 +112,8 @@ function generate_3d_dicts(mesh,solver,lst_nodes,lst_ls,nr=10)
   dicts
 end
 
-dicts_cartesian=generate_2d_dicts(:cartesian,:gamg,[1],[16,32,64,128,256,512])
-dicts=generate_2d_dicts(:p4est,:gamg,[1],collect(4:9))
+dicts_cartesian=generate_2d_dicts(:cartesian,:gamg,collect(3:8),[16,32,64,128,256,512])
+dicts=generate_2d_dicts(:p4est,:gamg,collect(3:8),collect(4:9))
 append!(dicts,dicts_cartesian)
 template = read(projectdir("jobtemplate.sh"),String)
 for params in dicts
