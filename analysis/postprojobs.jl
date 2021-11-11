@@ -12,7 +12,7 @@ vals = map(values(cols)) do col
     if isa(v,NamedTuple)
       v.max
     elseif isa(v,Tuple)
-      first(v)
+      prod(v)
     else
       v
     end
@@ -23,9 +23,9 @@ dfmax = DataFrame(vals,keys(cols))
 sort!(dfmax,[:np,:ir])
 
 rows = eachrow(copy(dfmax))
-dict = Dict{Tuple{Int,Int}}{Any}()
+dict = Dict{Tuple{Int,Int,String,String}}{Any}()
 for row in rows
-  key = (row.nc,row.np)
+  key = (row.nc,row.np,row.mesh,row.solver)
   if haskey(dict,key)
     prevrow = dict[key]
     for (k,v) in pairs(row)
@@ -45,7 +45,3 @@ mkpath(plotsdir())
 fn = plotsdir("summary.csv")
 CSV.write(fn,df)
 df
-
-
-
-

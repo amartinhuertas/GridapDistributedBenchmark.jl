@@ -30,6 +30,7 @@ function jobdict(params)
   "mem" => "$(prod(np)*4)gb",
   "name" => jobname(fparams),
   "nc" => nc,
+  "numrefs" => haskey(params,:numrefs) ? params[:numrefs] : -1,
   "mesh" => params[:mesh],
   "solver" => params[:solver],
   "n" => prod(np),
@@ -42,47 +43,78 @@ function jobdict(params)
   )
 end
 
-dicts = Dict[]
-d=2
-lst_nodes = collect(1:1)
-lst_ls    = [16]#,32,64,128,256,512]
-for node in lst_nodes
-  px=6*node
-  py=8*node
-  for ls in lst_ls
-     nx=px*ls
-     ny=py*ls
-     aux=Dict(:d=>2,:nc=>(nx,ny),:np=>(px,py),:mesh=>:cartesian,:solver=>:gamg,:nr=>10)
-     push!(dicts,aux)
+function generate_2d_dicts(mesh,solver,lst_nodes,lst_ls,nr=10)
+   dicts = Dict[]
+   d=2
+   for node in lst_nodes
+     px=6*node
+     py=8*node
+     for ls in lst_ls
+       if (mesh==:cartesian)
+          nx=px*ls
+          ny=py*ls
+          aux=Dict(:d=>2,
+                   :nc=>(nx,ny),
+                   :np=>(px,py),
+                   :mesh=>:cartesian,
+                   :solver=>solver,
+                   :nr=>nr)
+          push!(dicts,aux)
+       else
+          nx=px*(2^ls)
+          ny=py*(2^ls)
+          aux=Dict(:d=>2,
+                   :numrefs=>ls,
+                   :nc=>(nx,ny),
+                   :np=>(px,py),
+                   :mesh=>:p4est,
+                   :solver=>solver,
+                   :nr=>nr)
+          push!(dicts,aux)
+       end
+     end
+   end
+end
+
+function generate_3d_dicts(mesh,solver,lst_nodes,lst_ls,nr=10)
+  d=3
+  lst_nodes = collect(1:1)
+  lst_ls    = [10]#,20,30,40]
+  for node in lst_nodes
+    px=4*node
+    py=4*node
+    pz=3*node
+    for ls in lst_ls
+      if (mesh==:cartesian)
+        nx=px*ls
+        ny=py*ls
+        nz=pz*ls
+        aux=Dict(:d=>3,
+                 :nc=>(nx,ny,nz),
+                 :np=>(px,py,pz),
+                 :mesh=>:cartesian,
+                 :solver=>solver,
+                 :nr=>nr)
+        push!(dicts,aux)
+      else
+        nx=px*(2^ls)
+        ny=py*(2^ls)
+        nz=pz*(2^ls)
+        aux=Dict(:d=>3,
+                 :numrefs=>ls,
+                 :nc=>(nx,ny,nz),
+                 :np=>(px,py,pz),
+                 :mesh=>:p4est,
+                 :solver=>solver,
+                 :nr=>nr)
+      end
+    end
   end
 end
 
-d=3
-lst_nodes = collect(1:1)
-lst_ls    = [10]#,20,30,40]
-for node in lst_nodes
-  px=4*node
-  py=4*node
-  pz=3*node
-  for ls in lst_ls
-     nx=px*ls
-     ny=py*ls
-     nz=pz*ls
-     aux=Dict(:d=>3,:nc=>(nx,ny,nz),:np=>(px,py,pz),:mesh=>:cartesian,:solver=>:gamg,:nr=>10)
-     push!(dicts,aux)
-  end
-end
-
-dicts=[Dict(:d=>2,:nc=>(10,10),:np=>(1,1),:mesh=>:cartesian,:solver=>:gamg,:nr=>10)]
-
-# allparams=Dict()
-# allparams = Dict(
-#  :npx => map(i->ceil(Int,2^(i/3)*2),[0,1,3,4,5,6,7,8,9,10]),
-#  :ncx => 300,
-#  :nr => 6
-#  )
+dicts=[Dict(:d=>2,:numrefs=>2,:nc=>(4,4),:np=>(1,1),:mesh=>:p4est,:solver=>:gamg,:nr=>10)]
+dicts=[Dict(:d=>2,:numrefs=>2,:nc=>(4,4),:np=>(1,1),:mesh=>:cartesian,:solver=>:gamg,:nr=>10)]
 template = read(projectdir("jobtemplate.sh"),String)
-# dicts = dict_list(allparams)
 for params in dicts
    fparams=convert_nc_np_to_prod(params)
    jobfile = datadir(jobname(fparams,"sh"))

@@ -14,5 +14,5 @@ source {{{modules}}}
 
 $HOME/.julia/bin/mpiexecjl --project={{{projectdir}}} -n {{n}}\
     julia -J {{{sysimage}}} -O3 --check-bounds=no -e\
-      'using GridapDistributedBenchmark; GridapDistributedBenchmark.main(mesh=:{{mesh}},solver=:{{solver}},nc={{nc}},np={{np}},nr={{nr}},title="{{{title}}}")'
+      'using GridapDistributedBenchmark; GridapDistributedBenchmark.main(mesh=:{{mesh}},solver=:{{solver}},nc={{nc}},np={{np}},numrefs={{numrefs}},nr={{nr}},title="{{{title}}}")'
 

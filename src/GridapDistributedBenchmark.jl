@@ -73,7 +73,7 @@ function _from_setup_fe_space_to_the_end(t,model,order=1)
 
   ngdofs  = length(V.gids)
   ngcells = length(model.gids)
-  ngdofs, ngcells, e_l2
+  ngcells, ngdofs, e_l2
 end
 
 
@@ -88,7 +88,7 @@ function generate_model_cartesian(parts,subdomains,partition)
   model = CartesianDiscreteModel(parts, domain, partition)
 end
 
-function main_cartesian(parts,subdomains,partition,title,ir,order=1)
+function main_cartesian(parts,subdomains,partition,solver,title,ir,order=1)
   t = PArrays.PTimer(parts,verbose=true)
   PArrays.tic!(t)
   model=generate_model_cartesian(parts,subdomains,partition)
@@ -101,6 +101,7 @@ function main_cartesian(parts,subdomains,partition,title,ir,order=1)
     merge!(out,data)
     out["d"] = length(subdomains)
     out["mesh"] = "cartesian"
+    out["solver"] = solver
     out["enorm"] = enorm
     out["nparts"] = nparts
     out["ngdofs"] = ngdofs
@@ -124,7 +125,7 @@ function generate_model_p4est(parts,subdomains,numrefs)
   model = UniformlyRefinedForestOfOctreesDiscreteModel(parts,coarse_model,numrefs)
 end
 
-function main_p4est(parts,subdomains,numrefs,title,ir,order=1)
+function main_p4est(parts,subdomains,numrefs,solver,title,ir,order=1)
   t = PArrays.PTimer(parts,verbose=true)
   PArrays.tic!(t)
   model=generate_model_p4est(parts,subdomains,numrefs)
@@ -137,11 +138,12 @@ function main_p4est(parts,subdomains,numrefs,title,ir,order=1)
     merge!(out,data)
     out["d"] = length(subdomains)
     out["mesh"] = "p4est"
+    out["solver"] = solver
     out["enorm"] = enorm
     out["nparts"] = nparts
     out["ngdofs"] = ngdofs
     out["ngcells"] = ngcells
-    out["nc"] = numrefs
+    out["nc"] = map(x->2^numrefs*x,subdomains)
     out["np"] = subdomains
     out["ir"] = ir
     save("$title.bson",out)
@@ -156,7 +158,7 @@ function main(;
   np::Tuple,
   nr::Integer,
   title::AbstractString,
-  nc::Tuple=(-1,-1),
+  nc::Tuple,
   numrefs::Integer=-1,
   k::Integer=1,
   verbose::Bool=true)
@@ -167,10 +169,9 @@ function main(;
   # Process parameters of mesh
   if mesh == :p4est
     numrefs>=1 || throw(ArgumentError("numrefs should be larger or equal than 1"))
-  else
-    length(np) == length(nc) || throw(ArgumentError("np and nc must be of same length"))
-    all(nc .> 0) || throw(ArgumentError("all values in nc should be larger than 0"))
   end
+  length(np) == length(nc) || throw(ArgumentError("np and nc must be of same length"))
+  all(nc .> 0) || throw(ArgumentError("all values in nc should be larger than 0"))
 
   if solver == :gamg
     options=petsc_gamg_options()
@@ -184,7 +185,7 @@ function main(;
         GridapPETSc.with(args=split(options)) do
            str_r   = lpad(ir,ceil(Int,log10(nr)),'0')
            title_r = "$(title)_ir$(str_r)"
-           main_p4est(parts,np,numrefs,title_r,ir,1)
+           main_p4est(parts,np,numrefs,string(solver),title_r,ir,1)
            GridapPETSc.gridap_petsc_gc()
         end
       end
@@ -195,7 +196,7 @@ function main(;
         GridapPETSc.with(args=split(options)) do
            str_r   = lpad(ir,ceil(Int,log10(nr)),'0')
            title_r = "$(title)_ir$(str_r)"
-           main_cartesian(parts,np,nc,title_r,ir,1)
+           main_cartesian(parts,np,nc,string(solver),title_r,ir,1)
            GridapPETSc.gridap_petsc_gc()
         end
       end
