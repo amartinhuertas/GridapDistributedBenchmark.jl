@@ -10,6 +10,9 @@
 #PBS -e {{{e}}} 
 #PBS -l software=GridapDistributed.jl
 
+PERIOD=0.1
+top -b -d $PERIOD -u am6349 > {{title}}.log &
+
 source {{{modules}}}
 
 $HOME/.julia/bin/mpiexecjl --project={{{projectdir}}} -n {{n}}\
