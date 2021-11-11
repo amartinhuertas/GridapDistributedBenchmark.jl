@@ -113,7 +113,7 @@ function generate_3d_dicts(mesh,solver,lst_nodes,lst_ls,nr=10)
 end
 
 dicts_cartesian=generate_2d_dicts(:cartesian,:gamg,[1],[16,32,64,128,256,512])
-dicts=generate_2d_dicts(:p4est,:gamg,[1],collect(2:5))
+dicts=generate_2d_dicts(:p4est,:gamg,[1],collect(4:9))
 append!(dicts,dicts_cartesian)
 template = read(projectdir("jobtemplate.sh"),String)
 for params in dicts
