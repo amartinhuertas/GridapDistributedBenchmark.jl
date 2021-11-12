@@ -10,12 +10,14 @@ $HOME/.julia/bin/mpiexecjl --project=/scratch/bt62/am6349/GridapDistributedBench
        GridapDistributedBenchmark.main(mesh=:cartesian,
                                        solver=:gamg,nc=(32, 32, 24),
                                        np=(4, 4, 3),numrefs=-1,nr=5,
-                                       title="/scratch/bt62/am6349/GridapDistributedBenchmark.jl/analysis/data/d_3_mesh_cartesian_nc_24576_np_48_nr_5_solver_gamg")'
+                                       title="data/d_3_mesh_cartesian_nc_24576_np_48_nr_5_solver_gamg")'
 ```
 
-Julia Packages
+GridapDistributedBenchmark version
 
 * `GridapDistributedBenchmark.jl`  1bcfc6ecc2845f980c387d6bec8191b7f1467f61 branch: main 
+
+Rest of packages details
 
 ```
 (GridapDistributedBenchmark) pkg> status
